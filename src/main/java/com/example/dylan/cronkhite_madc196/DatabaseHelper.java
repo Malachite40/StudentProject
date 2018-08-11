@@ -44,7 +44,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String ASSESMENT_DUE_DATE = "assesmentDueDate";
     //course ID
 
-
+    //mentor - remember to check the order of the variables
+    public static final String MENTOR_TABLE_NAME = "mentor";
+    public static final String MENTOR_ID = "mentorId";
+    public static final String MENTOR_NAME = "mentorName";
+    public static final String MENTOR_EMAIL = "mentorEmail";
+    public static final String MENTOR_PHONE = "mentorPhone";
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -101,7 +106,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         {
             return true;
         }
-
+        
     }
     public void printTermTable(){
         SQLiteDatabase db = this.getWritableDatabase();
@@ -317,6 +322,73 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COURSE_ID, a.getCourseID());
 
         String id = Integer.toString(a.getAssesmentID());
+        db.update(ASSESMENT_TABLE_NAME, contentValues, ASSESMENT_ID + "  = ?", new String[]{id});
+        return true;
+    }
+
+    //MENTORS
+    public void createMentorTable(){
+        String createTable = "CREATE TABLE IF NOT EXISTS " + MENTOR_TABLE_NAME + " (" +
+        MENTOR_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        MENTOR_NAME + " TEXT, " +
+        MENTOR_EMAIL + " TEXT, " +
+        MENTOR_PHONE + " TEXT)";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL(createTable);
+    }
+    public boolean addMentor(Mentor m){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MENTOR_NAME, a.getMentorName());
+        contentValues.put(MENTOR_EMAIL, a.getEmail());
+        contentValues.put(MENTOR_PHONE, a.getPHone());
+
+        long result = db.insert(MENTOR_NAME, null, contentValues);
+
+        if (result == -1){
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    public void printMentorTable() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor data = db.rawQuery("SELECT * FROM " + MENTOR_TABLE_NAME, null);
+        StringBuffer buffer = new StringBuffer();
+        while (data.moveToNext()) {
+            buffer.append("\n");
+            buffer.append(MENTOR_ID + ": " + data.getString(0) + "\n");
+            buffer.append(MENTOR_NAME + ": " + data.getString(1) + "\n");
+            buffer.append(MENTOR_EMAIL + ": " + data.getString(2) + "\n");
+            buffer.append(MENTOR_PHONE + ": " + data.getString(3) + "\n");
+        }
+        Log.v("----------------------", buffer.toString());
+    }
+    public ArrayList<Mentor> getAllMentors(){
+        ArrayList<Mentor> mentor = new ArrayList<>();
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor data = db.rawQuery("SELECT * FROM " + MENTOR_TABLE_NAME,null);
+        while(data.moveToNext()){
+            int id = Integer.parseInt(data.getString(0));
+            mentor.add(new Mentor(id,
+                    data.getString(1),
+                    data.getString(2),
+                    data.getString(3)));
+        }
+        return mentor;
+    }
+    public void updateMentor(Mentor m){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MENTOR_NAME, m.getMentorName());
+        contentValues.put(MENTOR_EMAIL, m.getEmail());
+        contentValues.put(MENTOR_PHONE, m.getPHone());
+
+        String id = Integer.toString(m.getMentorID());
         db.update(ASSESMENT_TABLE_NAME, contentValues, ASSESMENT_ID + "  = ?", new String[]{id});
         return true;
     }
