@@ -9,10 +9,15 @@
     </style>
 
     //Terms View
-    <style name="TermMainViewActionBar" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="MainActivityToolbarStyle" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:background">@color/colorPrimary</item>
+    </style>
+    //Popupstyle View
+    <style name="CustomPopupStyle" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="overlapAnchor">false</item>
+        <item name="android:dropDownVerticalOffset">-4dp</item>
     </style>
 </resources>

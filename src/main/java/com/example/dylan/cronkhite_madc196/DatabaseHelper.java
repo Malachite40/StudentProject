@@ -42,14 +42,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String ASSESMENT_ID = "assesmentId";
     public static final String ASSESMENT_TITLE = "assesmentTitle";
     public static final String ASSESMENT_DUE_DATE = "assesmentDueDate";
+    public static final String ASSESMENT_ALERT = "assesmentAlert";
     //course ID
 
-    //mentor - remember to check the order of the variables
+    //mentor
     public static final String MENTOR_TABLE_NAME = "mentor";
     public static final String MENTOR_ID = "mentorId";
     public static final String MENTOR_NAME = "mentorName";
     public static final String MENTOR_EMAIL = "mentorEmail";
     public static final String MENTOR_PHONE = "mentorPhone";
+
+    //course - mentor set
+    public static final String COURSEMENTOR_TABLE_NAME = "courseMentorSet";
+    public static final String COURSEMENTOR_ID = "courseMentorSetId";
+    //mentor ID
+    //course ID
+
+    //term - course set
+    public static final String TERMCOURSE_TABLE_NAME = "termCourseSet";
+    public static final String TERMCOURSE_ID = "termCourseId";
+    //term id
+    //course id
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -143,6 +156,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         db.update(TERM_TABLE_NAME, contentValues, TERM_ID + "  = ?", new String[]{id});
         return true;
+    }
+    public int getNextTermID(){
+        int max = 0;
+        for(Term t : getAllTerms()){
+            if(t.getTermID()>max){
+                max = t.getTermID();
+            }
+        }
+        return max+1;
+    }
+    public Term getTerm(int id){
+        for(Term t : getAllTerms()){
+            if(t.getTermID() == id){
+                return  t;
+            }
+        }
+        return null;
+    }
+    public void deleteAllTerms(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TERM_TABLE_NAME, null,null);
+    }
+    public void deleteTerm(int id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String sid = Integer.toString(id);
+        db.delete(TERM_TABLE_NAME, TERM_ID + " = ?",new String[]{sid});
     }
 
     //courses
@@ -254,6 +293,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(COURSE_TABLE_NAME, contentValues, COURSE_ID + "  = ?", new String[]{id});
         return true;
     }
+    public Course getCourse(int id){
+        for (Course c : getAllCourses()){
+            if(c.getCourseID() == id){
+                return  c;
+            }
+        }
+        return null;
+    }
+    public void deleteAllCourses(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(COURSE_TABLE_NAME, null,null);
+    }
 
     //assesments
     public void createAssesmentTable(){
@@ -262,6 +313,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 ASSESMENT_TITLE + " TEXT, " +
                 ASSESMENT_DUE_DATE + " TEXT, " +
                 COURSE_ID + " INTEGER, " +
+                ASSESMENT_ALERT + " INTEGER, " +
                 " FOREIGN KEY("+COURSE_ID+") REFERENCES "+COURSE_TABLE_NAME+"("+COURSE_ID+"))";
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -273,6 +325,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(ASSESMENT_TITLE, a.getAssesmentTitle());
         contentValues.put(ASSESMENT_DUE_DATE, a.getDueDate());
         contentValues.put(COURSE_ID, a.getCourseID());
+        int s = 0;
+        if(a.isAlertEnabled()){
+            s = 1;
+        }
+        contentValues.put(ASSESMENT_ALERT,s);
 
         long result = db.insert(ASSESMENT_TABLE_NAME, null, contentValues);
 
@@ -294,11 +351,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             buffer.append(ASSESMENT_TITLE+ ": " + data.getString(1) + "\n");
             buffer.append(ASSESMENT_DUE_DATE + ": " + data.getString(2) + "\n");
             buffer.append(COURSE_ID + ": " + data.getString(3) + "\n");
+            buffer.append(ASSESMENT_ALERT + ": " + data.getString(4));
         }
         Log.v("----------------------", buffer.toString());
     }
-
-    //CHECK THESE TWO
     public ArrayList<Assesment> getAllAssesments(){
         ArrayList<Assesment> assesments = new ArrayList<>();
 
@@ -307,10 +363,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         while(data.moveToNext()){
             int id = Integer.parseInt(data.getString(0));
             int courseid = Integer.parseInt(data.getString(3));
+            boolean alert = false;
+            if(Integer.parseInt(data.getString(4)) == 1){
+                alert = true;
+            }
             assesments.add(new Assesment(id,
                     data.getString(1),
                     data.getString(2),
-                    courseid));
+                    courseid,
+                    alert));
         }
         return assesments;
     }
@@ -320,13 +381,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(ASSESMENT_TITLE, a.getAssesmentTitle());
         contentValues.put(ASSESMENT_DUE_DATE, a.getDueDate());
         contentValues.put(COURSE_ID, a.getCourseID());
+        String s = "0";
+        if(a.isAlertEnabled()){
+            s = "1";
+        }
+        contentValues.put(ASSESMENT_ALERT,s);
 
         String id = Integer.toString(a.getAssesmentID());
         db.update(ASSESMENT_TABLE_NAME, contentValues, ASSESMENT_ID + "  = ?", new String[]{id});
         return true;
     }
 
-    //MENTORS
+    //menotr
     public void createMentorTable(){
         String createTable = "CREATE TABLE IF NOT EXISTS " + MENTOR_TABLE_NAME + " (" +
         MENTOR_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -340,11 +406,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean addMentor(Mentor m){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(MENTOR_NAME, a.getMentorName());
-        contentValues.put(MENTOR_EMAIL, a.getEmail());
-        contentValues.put(MENTOR_PHONE, a.getPHone());
+        contentValues.put(MENTOR_NAME, m.getMentorName());
+        contentValues.put(MENTOR_EMAIL, m.getEmail());
+        contentValues.put(MENTOR_PHONE, m.getPhone());
 
-        long result = db.insert(MENTOR_NAME, null, contentValues);
+        long result = db.insert(MENTOR_TABLE_NAME, null, contentValues);
 
         if (result == -1){
             return false;
@@ -381,15 +447,186 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return mentor;
     }
-    public void updateMentor(Mentor m){
+    public boolean updateMentor(Mentor m){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(MENTOR_NAME, m.getMentorName());
         contentValues.put(MENTOR_EMAIL, m.getEmail());
-        contentValues.put(MENTOR_PHONE, m.getPHone());
+        contentValues.put(MENTOR_PHONE, m.getPhone());
 
         String id = Integer.toString(m.getMentorID());
-        db.update(ASSESMENT_TABLE_NAME, contentValues, ASSESMENT_ID + "  = ?", new String[]{id});
+        db.update(MENTOR_TABLE_NAME, contentValues, MENTOR_ID + "  = ?", new String[]{id});
         return true;
+    }
+    public Mentor getMentor(int id){
+        for(Mentor m : getAllMentors()){
+            if(m.getMentorID() == id){
+                return m;
+            }
+        }
+        return null;
+    }
+    public void deleteMentor(int id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String sid = Integer.toString(id);
+        db.delete(MENTOR_TABLE_NAME, MENTOR_ID + " = ?",new String[]{sid});
+    }
+    //course-mentor set
+    public void createCourseMentorTable(){
+        String createTable = "CREATE TABLE IF NOT EXISTS " + COURSEMENTOR_TABLE_NAME + " (" +
+                COURSEMENTOR_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                MENTOR_ID + " INTEGER, " +
+                COURSE_ID + " INTEGER, " +
+                " FOREIGN KEY("+MENTOR_ID+") REFERENCES "+MENTOR_TABLE_NAME+"("+MENTOR_ID+"), " +
+                " FOREIGN KEY("+COURSE_ID+") REFERENCES "+COURSE_TABLE_NAME+"("+COURSE_ID+"))";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL(createTable);
+    }
+    public boolean addCourseMentor(CourseMentorSet cms){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MENTOR_ID, cms.getMentorID());
+        contentValues.put(COURSE_ID, cms.getCourseID());
+
+        long result = db.insert(COURSEMENTOR_TABLE_NAME, null, contentValues);
+
+        if (result == -1){
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    public void printCourseMentorTable(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor data = db.rawQuery("SELECT * FROM " + COURSEMENTOR_TABLE_NAME, null);
+        StringBuffer buffer = new StringBuffer();
+        while (data.moveToNext()) {
+            buffer.append("\n");
+            buffer.append(COURSEMENTOR_ID + ": " + data.getString(0) + "\n");
+            buffer.append(MENTOR_ID + ": " + data.getString(1) + "\n");
+            buffer.append(COURSE_ID + ": " + data.getString(2) + "\n");
+        }
+        Log.v("----------------------", buffer.toString());
+    }
+    public ArrayList<CourseMentorSet> getAllCourseMentorSets(){
+        ArrayList<CourseMentorSet> cms = new ArrayList<>();
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor data = db.rawQuery("SELECT * FROM " + COURSE_TABLE_NAME,null);
+        while(data.moveToNext()){
+            int id = Integer.parseInt(data.getString(0));
+            int mentorId = Integer.parseInt(data.getString(1));
+            int courseId = Integer.parseInt(data.getString(2));
+            cms.add(new CourseMentorSet(id,mentorId,courseId));
+        }
+        return cms;
+    }
+    public boolean updateCourseMentorSet(CourseMentorSet cms){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MENTOR_ID, cms.getMentorID());
+        contentValues.put(COURSE_ID, cms.getCourseID());
+
+        String id = Integer.toString(cms.getCourseMentorSetID());
+        db.update(COURSEMENTOR_TABLE_NAME, contentValues, COURSEMENTOR_ID + "  = ?", new String[]{id});
+        return true;
+    }
+
+    //term - course set
+    public void createTermCourseTable(){
+        String createTable = "CREATE TABLE IF NOT EXISTS " + TERMCOURSE_TABLE_NAME + " (" +
+                TERMCOURSE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                TERM_ID + " INTEGER, " +
+                COURSE_ID + " INTEGER, " +
+                " FOREIGN KEY("+TERM_ID+") REFERENCES "+TERM_TABLE_NAME+"("+TERM_ID+"), " +
+                " FOREIGN KEY("+COURSE_ID+") REFERENCES "+COURSE_TABLE_NAME+"("+COURSE_ID+"))";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL(createTable);
+    }
+    public boolean addTermCourse(TermCourseSet tcs){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(TERM_ID, tcs.getTermId());
+        contentValues.put(COURSE_ID, tcs.getCourseId());
+
+        long result = db.insert(TERMCOURSE_TABLE_NAME, null, contentValues);
+
+        if (result == -1){
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    public void printTermCourseTable(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor data = db.rawQuery("SELECT * FROM " + TERMCOURSE_TABLE_NAME, null);
+        StringBuffer buffer = new StringBuffer();
+        while (data.moveToNext()) {
+            buffer.append("\n");
+            buffer.append(TERMCOURSE_ID + ": " + data.getString(0) + "\n");
+            buffer.append(TERM_ID + ": " + data.getString(1) + "\n");
+            buffer.append(COURSE_ID + ": " + data.getString(2) + "\n");
+        }
+        Log.v("----------------------", buffer.toString());
+    }
+    public ArrayList<TermCourseSet> getAllTermCourseSets(){
+        ArrayList<TermCourseSet> tcs = new ArrayList<>();
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor data = db.rawQuery("SELECT * FROM " + TERMCOURSE_TABLE_NAME,null);
+        while(data.moveToNext()){
+            int id = Integer.parseInt(data.getString(0));
+            int termId = Integer.parseInt(data.getString(1));
+            int courseId = Integer.parseInt(data.getString(2));
+            tcs.add(new TermCourseSet(id,termId,courseId));
+        }
+        return tcs;
+    }
+    public boolean updateTermCourseSet(TermCourseSet tcs){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(TERM_ID, tcs.getTermId());
+        contentValues.put(COURSE_ID, tcs.getCourseId());
+
+        String id = Integer.toString(tcs.getTermCourseId());
+        db.update(TERMCOURSE_TABLE_NAME, contentValues, TERMCOURSE_ID + "  = ?", new String[]{id});
+        return true;
+    }
+    public void deleteTermCourseSet(int termId, int courseId){
+        String termID = Integer.toString(termId);
+        String courseID = Integer.toString(courseId);
+        SQLiteDatabase db = this.getWritableDatabase();
+        int result = db.delete(TERMCOURSE_TABLE_NAME, TERM_ID + " = ? AND " + COURSE_ID + " = ?", new String[] {termID, courseID});
+        Log.v("Attempted to delete: ", TERM_ID + " = "+Integer.toString(termId) + " AND " + COURSE_ID + " = " + Integer.toString(courseId));
+        if(result == -1){
+            Log.v("FAILED TO DELETE", "");
+        }
+    }
+    public ArrayList<Course> getAllCoursesForTerm(int termId){
+        ArrayList<Course> returnList = new ArrayList<>();
+        for (TermCourseSet set : getAllTermCourseSets()){
+            if(set.getTermId() == termId){
+                returnList.add(getCourse(set.getCourseId()));
+            }
+        }
+        return returnList;
+    }
+    public void deleteAllTermCourseSet(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TERMCOURSE_TABLE_NAME,null,null);
+    }
+    public boolean isTermRelatedToCourse(int termId, int courseId){
+        for (TermCourseSet s : getAllTermCourseSets()){
+            if(s.getTermId() == termId && s.getCourseId() == courseId){
+                return true;
+            }
+        }
+        return false;
     }
 }

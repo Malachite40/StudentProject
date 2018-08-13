@@ -5,12 +5,22 @@ public class Assesment {
     private String assesmentTitle;
     private String dueDate;
     private int courseID;
+    private boolean alertEnabled;
 
-    public Assesment(int assesmentID, String assesmentTitle, String dueDate, int courseID) {
+    public Assesment(int assesmentID, String assesmentTitle, String dueDate, int courseID, boolean alertEnabled) {
         this.assesmentID = assesmentID;
         this.assesmentTitle = assesmentTitle;
         this.dueDate = dueDate;
         this.courseID = courseID;
+        this.alertEnabled = alertEnabled;
+    }
+
+    public void setAlertEnabled(boolean alertEnabled) {
+        this.alertEnabled = alertEnabled;
+    }
+
+    public boolean isAlertEnabled() {
+        return alertEnabled;
     }
 
     public int getAssesmentID() {

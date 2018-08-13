@@ -5,6 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".EditTermView">
+    <include
+        android:id="@+id/appBar"
+        layout="@layout/activity_main_toolbar" />
 
     <android.support.design.widget.TextInputLayout
         android:id="@+id/textInputLayout"
@@ -17,14 +20,14 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appBar"
         app:layout_constraintVertical_bias="0.0">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/termNameTextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Course Name" />
+            android:hint="Term Name" />
     </android.support.design.widget.TextInputLayout>
 
     <TextView
@@ -76,7 +79,7 @@
         app:layout_constraintVertical_bias="0.01999998" />
 
     <ListView
-        android:id="@+id/termListListView"
+        android:id="@+id/courseListListView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
@@ -87,5 +90,23 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
-
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/addFloatingAcitonButton"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:clickable="true"
+        app:backgroundTint="@android:color/holo_red_light"
+        app:elevation="5dp"
+        app:fabSize="mini"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.97"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.97"
+        app:srcCompat="@drawable/plus" />
 </android.support.constraint.ConstraintLayout>

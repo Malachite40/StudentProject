@@ -14,6 +14,7 @@ public class EnabledTermAdapter extends BaseAdapter {
 
     private Context mContext;
     private List<EnabledTerm> mEnabledTermList = new ArrayList<>();
+    private ArrayList<View> listOfViews = new ArrayList<>();
 
     public EnabledTermAdapter(Context mContext, List<EnabledTerm> mEnabledTermList) {
         this.mContext = mContext;
@@ -46,6 +47,17 @@ public class EnabledTermAdapter extends BaseAdapter {
             checkBox.toggle();
         }
 
+        listOfViews.add(v);
         return v;
+    }
+
+    public void toggleCheckBox(int position){
+        mEnabledTermList.get(position).enabled = !mEnabledTermList.get(position).enabled;
+        CheckBox cb = (CheckBox)listOfViews.get(position).findViewById(R.id.checkBox);
+        cb.toggle();
+    }
+
+    public List<EnabledTerm> getmEnabledTermList() {
+        return mEnabledTermList;
     }
 }
