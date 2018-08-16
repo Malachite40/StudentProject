@@ -1,6 +1,9 @@
 package com.example.dylan.cronkhite_madc196;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,9 +20,12 @@ import android.widget.Toast;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
-    Button termsButton, courseButton, mentorButton;
+    Button termsButton, courseButton, mentorButton, assesmentButton;
     Toolbar toolbar;
 
+    final String PLEASE_MAKE_MENTOR_FIRST = "You must make a mentor first.";
+    String PLEASE_CREATE_TERM_NEXT = "You must create a term first.";
+    String PLEASE_CREATE_COURSE_NEXT = "You must create a course first.";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,22 +33,37 @@ public class MainActivity extends AppCompatActivity {
         mentorButton = (Button)findViewById(R.id.mentorsButton);
         termsButton = (Button) findViewById(R.id.termsButton);
         courseButton = (Button)findViewById(R.id.coursesButton);
+        assesmentButton = (Button)findViewById(R.id.assesmentButton);
+
         toolbar = (Toolbar)findViewById(R.id.appBar);
         setSupportActionBar(toolbar);
+        final DatabaseHelper db = new DatabaseHelper(this);
+        db.createAllTables();
 
         //term Button
         termsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent startIntent = new Intent(getApplicationContext(), TermsView.class);
-                startActivity(startIntent);
+                if(db.getNextMentorId() != 1){
+                    Intent startIntent = new Intent(getApplicationContext(), TermsView.class);
+                    startActivity(startIntent);
+                }
+                else{
+                    Toast.makeText(MainActivity.this, PLEASE_MAKE_MENTOR_FIRST, Toast.LENGTH_SHORT).show();
+                }
             }
         });
         courseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent startIntent = new Intent(getApplicationContext(), CourseView.class);
-                startActivity(startIntent);
+                if(db.getNextTermID() != 1){
+                    Intent startIntent = new Intent(getApplicationContext(), CourseView.class);
+                    startActivity(startIntent);
+                }
+                else{
+                    Toast.makeText(MainActivity.this, PLEASE_CREATE_TERM_NEXT, Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
         mentorButton.setOnClickListener(new View.OnClickListener() {
@@ -52,22 +73,22 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(startIntent);
             }
         });
+        assesmentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(db.getNextCourseID() != 1){
+                    Intent startIntent = new Intent(getApplicationContext(), AssesmentView.class);
+                    startActivity(startIntent);
+                }
+                else{
+                    Toast.makeText(MainActivity.this, PLEASE_CREATE_COURSE_NEXT, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         java.sql.Timestamp sqlDate = new java.sql.Timestamp(Calendar.getInstance().getTimeInMillis());
 
-        DatabaseHelper db = new DatabaseHelper(this);
-//
-        //tester
-//        db.createMentorTable();
-//        db.addMentor(new Mentor(1,"Dylan Cronkhite", "DylanEmail@gmail.com", "425-985-2107"));
-//        db.printMentorTable();
-//        db.updateMentor(new Mentor(1,"John Cronkhite", "DylanEmail@gmail.com", "425-985-2107"));
-//        db.printMentorTable();
-
-
-        //toast example
 //            Toast.makeText(MainActivity.this, "Data Successfully Added", Toast.LENGTH_LONG).show();
-
     }
 
     @Override

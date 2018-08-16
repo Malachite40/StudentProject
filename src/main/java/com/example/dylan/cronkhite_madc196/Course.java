@@ -8,9 +8,11 @@ public class Course {
     private String courseName;
     private String courseDescription;
     private String courseCode;
-    private boolean alertEnabled;
+    private boolean alertStartEnabled;
+    private boolean alertEndEnabled;
+    private String status;
 
-    public Course(int courseID, String startDate, String endDate, int termID, String courseName, String courseDescription, String courseCode, boolean alertEnabled) {
+    public Course(int courseID, String startDate, String endDate, int termID, String courseName, String courseDescription, String courseCode, boolean alertStartEnabled, boolean alertEndEnabled, String status) {
         this.courseID = courseID;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -18,7 +20,17 @@ public class Course {
         this.courseName = courseName;
         this.courseDescription = courseDescription;
         this.courseCode = courseCode;
-        this.alertEnabled = alertEnabled;
+        this.alertStartEnabled = alertStartEnabled;
+        this.alertEndEnabled = alertEndEnabled;
+        this.status = status;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public int getCourseID() {
@@ -77,11 +89,19 @@ public class Course {
         this.courseCode = courseCode;
     }
 
-    public boolean isAlertEnabled() {
-        return alertEnabled;
+    public boolean isAlertStartEnabled() {
+        return alertStartEnabled;
     }
 
-    public void setAlertEnabled(boolean alertEnabled) {
-        this.alertEnabled = alertEnabled;
+    public void setAlertStartEnabled(boolean alertStartEnabled) {
+        this.alertStartEnabled = alertStartEnabled;
+    }
+
+    public boolean isAlertEndEnabled() {
+        return alertEndEnabled;
+    }
+
+    public void setAlertEndEnabled(boolean alertEndEnabled) {
+        this.alertEndEnabled = alertEndEnabled;
     }
 }

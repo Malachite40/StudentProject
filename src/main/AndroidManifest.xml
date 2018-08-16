@@ -23,7 +23,9 @@
         <activity android:name=".EditCourse" />
         <activity android:name=".CourseView" />
         <activity android:name=".CourseDetails" />
-        <activity android:name=".EditMentor"></activity>
+        <activity android:name=".EditMentor" />
+        <activity android:name=".AssesmentView" />
+        <activity android:name=".EditAssesmentView"></activity>
     </application>
 
 </manifest>

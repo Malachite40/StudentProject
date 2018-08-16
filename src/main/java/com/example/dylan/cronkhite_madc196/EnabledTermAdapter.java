@@ -54,10 +54,36 @@ public class EnabledTermAdapter extends BaseAdapter {
     public void toggleCheckBox(int position){
         mEnabledTermList.get(position).enabled = !mEnabledTermList.get(position).enabled;
         CheckBox cb = (CheckBox)listOfViews.get(position).findViewById(R.id.checkBox);
-        cb.toggle();
+        cb.setChecked(!cb.isChecked());
     }
+    public void setAllCheckBoxes(boolean b){
+        for (int i = 0; i < listOfViews.size(); i++) {
+            CheckBox cb = (CheckBox)listOfViews.get(i).findViewById(R.id.checkBox);
+            EnabledTerm t = mEnabledTermList.get(i);
 
+            cb.setChecked(b);
+            t.enabled = b;
+
+        }
+    }
     public List<EnabledTerm> getmEnabledTermList() {
         return mEnabledTermList;
+    }
+    public void enableCheckBoxByCourseId(int courseId){
+        int i = 0;
+        for (EnabledTerm e : mEnabledTermList){
+            if(e.courseId == courseId){
+                toggleCheckBox(i);
+                i++;
+            }
+        }
+    }
+    public boolean atLeastOneChecked(){
+        for (EnabledTerm t : mEnabledTermList){
+            if(t.enabled){
+                return true;
+            }
+        }
+        return false;
     }
 }

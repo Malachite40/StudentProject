@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 public class CourseDetails extends AppCompatActivity {
 
@@ -34,7 +35,7 @@ public class CourseDetails extends AppCompatActivity {
         setContentView(R.layout.activity_course_details);
 
         courseCodeTextView = (TextView)findViewById(R.id.courseCodeTextView);
-        courseTitleTextView = (TextView)findViewById(R.id.courseTitleTextView);
+        courseTitleTextView = (TextView)findViewById(R.id.assessmentTitleTextView);
         startDateTextField = (TextView)findViewById(R.id.startDateTextField);
         endDateTextView = (TextView)findViewById(R.id.endDateTextView);
         descriptionTextView = (TextView)findViewById(R.id.descriptionTextView);
@@ -53,7 +54,26 @@ public class CourseDetails extends AppCompatActivity {
                 startActivity(startIntent);
             }
         });
-        setCourseValues();
+        try{
+            setCourseValues();
+            updateMentorList();
+        }
+        catch(Exception e){
+            Intent startIntent = new Intent(getApplicationContext(), CourseView.class);
+            startActivity(startIntent);
+        }
+
+    }
+    void updateMentorList(){
+        ArrayList<Mentor> ms = new ArrayList<>();
+        for (CourseMentorSet set : db.getAllCourseMentorSets()){
+            if(set.getCourseID() == courseId){
+                ms.add(db.getMentor(set.getMentorID()));
+            }
+        }
+
+        MentorListAdapter adapter = new MentorListAdapter(getApplicationContext(),ms);
+        mentorsListView.setAdapter(adapter);
     }
     void setCourseValues(){
         Course c = db.getCourse(courseId);
@@ -82,9 +102,10 @@ public class CourseDetails extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case android.R.id.home:
-                Intent startIntent = new Intent(getApplicationContext(), MainActivity.class);
+                Intent startIntent = new Intent(getApplicationContext(), CourseView.class);
                 startActivity(startIntent);
                 return super.onOptionsItemSelected(item);
+
         }
         return super.onOptionsItemSelected(item);
     }

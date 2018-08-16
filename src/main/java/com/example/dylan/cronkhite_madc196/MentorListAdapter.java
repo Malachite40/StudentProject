@@ -40,10 +40,10 @@ public class MentorListAdapter extends BaseAdapter {
         TextView name=(TextView)v.findViewById(R.id.nameTextView);
         TextView phone = (TextView)v.findViewById(R.id.phoneTextView);
         TextView email = (TextView)v.findViewById(R.id.emailTextView);
-
-        name.setText(mentors.get(position).getMentorName());
-        phone.setText(mentors.get(position).getPhone());
-        email.setText(mentors.get(position).getEmail());
+        Mentor m = (Mentor) getItem(position);
+        name.setText(m.getMentorName());
+        phone.setText(m.getPhone());
+        email.setText(m.getEmail());
 
         views.add(v);
         return v;

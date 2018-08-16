@@ -1,6 +1,5 @@
 package com.example.dylan.cronkhite_madc196;
 
-import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -8,16 +7,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import java.sql.Date;
-import java.text.SimpleDateFormat;
+import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Locale;
 
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "school.db";
+    public static DatabaseHelper dbhelper;
     SQLiteDatabase database;
     //term
     public static final String TERM_TABLE_NAME = "term";
@@ -35,7 +32,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COURSE_NAME = "courseName";
     public static final String COURSE_DESCRIPTION = "courseDescription";
     public static final String COURSE_CODE = "courseCode";
-    public static final String COURSE_ALERT = "courseAlert";
+    public static final String COURSE_START_ALERT = "courseStartAlert";
+    public static final String COURSE_END_ALERT = "courseEndAlert";
+    public static final String COURSE_STATUS = "courseStatus";
 
     //assesment
     public static final String ASSESMENT_TABLE_NAME = "assesment";
@@ -64,12 +63,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     //term id
     //course id
 
+    //notification
+    public static final String NOTIFICATION_TABLE_NAME = "notificationTable";
+    public static final String NOTIFICATION_ID = "notificationId";
+    public static final String NOTIFICATION_TITLE = "notificationTitle";
+    public static final String NOTIFICATION_SUB_TEXT = "notificationSubText";
+    public static final String NOTIFICATION_TIME = "notificationTime";
     @Override
     public void onCreate(SQLiteDatabase db) {
+//        database = this.getWritableDatabase();
+        if(dbhelper == null){
+            dbhelper = this;
+        }
         database = db;
-        createTermTable();
-        createCourseTable();
-        createAssesmentTable();
+        createAllTables();
     }
 
     public DatabaseHelper(Context context) {
@@ -90,6 +97,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         mCursor.close();
         return false;
+    }
+    public void deleteAllData(){
+        deleteAllTerms();
+        deleteAllCourses();
+        deleteAllAssesments();
+        deleteAllMentors();
+        deleteAllCourseMentorSets();
+        deleteAllTermCourseSet();
+    }
+
+    public void createAllTables(){
+        createTermTable();
+        createTermCourseTable();
+        createCourseTable();
+        createAssesmentTable();
+        createCourseMentorTable();
+        createMentorTable();
+        createNotificationTable();
     }
     //term
     public void createTermTable(){
@@ -119,7 +144,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         {
             return true;
         }
-        
+
     }
     public void printTermTable(){
         SQLiteDatabase db = this.getWritableDatabase();
@@ -186,6 +211,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     //courses
     public void createCourseTable(){
+//        this.getWritableDatabase().execSQL("DROP TABLE IF EXISTS " + COURSE_TABLE_NAME);
         String createTable = "CREATE TABLE IF NOT EXISTS " + COURSE_TABLE_NAME + " (" +
                 COURSE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COURSE_START_DATE + " TEXT, " +
@@ -194,7 +220,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COURSE_NAME + " TEXT, " +
                 COURSE_DESCRIPTION + " TEXT, " +
                 COURSE_CODE + " TEXT, " +
-                COURSE_ALERT + " INTEGER, " +
+                COURSE_START_ALERT + " INTEGER, " +
+                COURSE_END_ALERT + " INTEGER, " +
+                COURSE_STATUS + " INTEGER, " +
                 " FOREIGN KEY("+TERM_ID+") REFERENCES "+TERM_TABLE_NAME+"("+TERM_ID+"))";
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -210,13 +238,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COURSE_NAME, c.getCourseName());
         contentValues.put(COURSE_DESCRIPTION, c.getCourseDescription());
         contentValues.put(COURSE_CODE, c.getCourseCode());
-        if(c.isAlertEnabled()){
-            contentValues.put(COURSE_ALERT, 1);
+        contentValues.put(COURSE_STATUS, c.getStatus());
+        if(c.isAlertStartEnabled()){
+            contentValues.put(COURSE_START_ALERT, 1);
         }
         else{
-            contentValues.put(COURSE_ALERT, 0);
+            contentValues.put(COURSE_START_ALERT, 0);
         }
-
+        if(c.isAlertEndEnabled()){
+            contentValues.put(COURSE_END_ALERT, 1);
+        }
+        else{
+            contentValues.put(COURSE_END_ALERT, 0);
+        }
 
         long result = db.insert(COURSE_TABLE_NAME, null, contentValues);
 
@@ -241,8 +275,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             buffer.append(COURSE_NAME + ": " + data.getString(4) + "\n");
             buffer.append(COURSE_DESCRIPTION + ": " + data.getString(5) + "\n");
             buffer.append(COURSE_CODE + ": " + data.getString(6) + "\n");
-            buffer.append(COURSE_ALERT + ": " + data.getString(7) + "\n");
-
+            buffer.append(COURSE_START_ALERT + ": " + data.getString(7) + "\n");
+            buffer.append(COURSE_END_ALERT + ": " + data.getString(8) + "\n");
+            buffer.append(COURSE_STATUS + ": " + data.getString(9) + "\n");
         }
         Log.v("----------------------", buffer.toString());
     }
@@ -257,18 +292,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             String s = data.getString(7);
             int bool = Integer.parseInt(s);
-            boolean alertEnabled = false;
+            boolean alertStartEnabled = false;
             if(bool == 1){
-                alertEnabled = true;
+                alertStartEnabled = true;
             }
-
+            String b = data.getString(8);
+            int end = Integer.parseInt(b);
+            boolean alertEndEnabled = false;
+            if(end == 1){
+                alertEndEnabled = true;
+            }
+            String status = data.getString(9);
             course.add(new Course(id,
                     data.getString(1),
                     data.getString(2),
                     termid, data.getString(4),
                     data.getString(5),
                     data.getString(6),
-                    alertEnabled));
+                    alertStartEnabled,
+                    alertEndEnabled,
+                    status));
         }
         return course;
     }
@@ -281,13 +324,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COURSE_NAME, c.getCourseName());
         contentValues.put(COURSE_DESCRIPTION, c.getCourseDescription());
         contentValues.put(COURSE_CODE, c.getCourseCode());
-        if(c.isAlertEnabled()){
-            contentValues.put(COURSE_ALERT, 1);
+        contentValues.put(COURSE_STATUS, c.getStatus());
+        if(c.isAlertStartEnabled()){
+            contentValues.put(COURSE_START_ALERT, 1);
         }
         else{
-            contentValues.put(COURSE_ALERT, 0);
+            contentValues.put(COURSE_START_ALERT, 0);
         }
-
+        if(c.isAlertEndEnabled()){
+            contentValues.put(COURSE_END_ALERT, 1);
+        }
+        else{
+            contentValues.put(COURSE_END_ALERT, 0);
+        }
 
         String id = Integer.toString(c.getCourseID());
         db.update(COURSE_TABLE_NAME, contentValues, COURSE_ID + "  = ?", new String[]{id});
@@ -305,6 +354,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(COURSE_TABLE_NAME, null,null);
     }
+    public int getNextCourseID(){
+        int max = 0;
+        for(Course t : getAllCourses()){
+            if(t.getCourseID()>max){
+                max = t.getCourseID();
+            }
+        }
+        return max+1;
+    }
+    public void deleteCourse(int id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String sid = Integer.toString(id);
+        db.delete(COURSE_TABLE_NAME, COURSE_ID + " = ?",new String[]{sid});
+    }
+
 
     //assesments
     public void createAssesmentTable(){
@@ -359,7 +423,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ArrayList<Assesment> assesments = new ArrayList<>();
 
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor data = db.rawQuery("SELECT * FROM " + COURSE_TABLE_NAME,null);
+        Cursor data = db.rawQuery("SELECT * FROM " + ASSESMENT_TABLE_NAME,null);
         while(data.moveToNext()){
             int id = Integer.parseInt(data.getString(0));
             int courseid = Integer.parseInt(data.getString(3));
@@ -391,14 +455,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(ASSESMENT_TABLE_NAME, contentValues, ASSESMENT_ID + "  = ?", new String[]{id});
         return true;
     }
+    public Assesment getAssesment(int id){
+        for (Assesment a : getAllAssesments()){
+            if(a.getAssesmentID() == id){
+                return a;
+            }
+        }
+        return null;
+    }
+    public void deleteAssesment(int id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String sid = Integer.toString(id);
+        db.delete(ASSESMENT_TABLE_NAME, ASSESMENT_ID + " = ?",new String[]{sid});
+    }
+    public void deleteAllAssesments(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(ASSESMENT_TABLE_NAME, null,null);
+    }
 
     //menotr
     public void createMentorTable(){
         String createTable = "CREATE TABLE IF NOT EXISTS " + MENTOR_TABLE_NAME + " (" +
-        MENTOR_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-        MENTOR_NAME + " TEXT, " +
-        MENTOR_EMAIL + " TEXT, " +
-        MENTOR_PHONE + " TEXT)";
+                MENTOR_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                MENTOR_NAME + " TEXT, " +
+                MENTOR_EMAIL + " TEXT, " +
+                MENTOR_PHONE + " TEXT)";
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL(createTable);
@@ -471,6 +552,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sid = Integer.toString(id);
         db.delete(MENTOR_TABLE_NAME, MENTOR_ID + " = ?",new String[]{sid});
     }
+    public void deleteAllMentors(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(MENTOR_TABLE_NAME, null,null);
+    }
+    public int getNextMentorId(){
+        int max = 0;
+        for(Mentor m : getAllMentors()){
+            if(m.getMentorID()>max){
+                max = m.getMentorID();
+            }
+        }
+        return max+1;
+    }
+
     //course-mentor set
     public void createCourseMentorTable(){
         String createTable = "CREATE TABLE IF NOT EXISTS " + COURSEMENTOR_TABLE_NAME + " (" +
@@ -515,7 +610,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ArrayList<CourseMentorSet> cms = new ArrayList<>();
 
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor data = db.rawQuery("SELECT * FROM " + COURSE_TABLE_NAME,null);
+        Cursor data = db.rawQuery("SELECT * FROM " + COURSEMENTOR_TABLE_NAME,null);
         while(data.moveToNext()){
             int id = Integer.parseInt(data.getString(0));
             int mentorId = Integer.parseInt(data.getString(1));
@@ -533,6 +628,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String id = Integer.toString(cms.getCourseMentorSetID());
         db.update(COURSEMENTOR_TABLE_NAME, contentValues, COURSEMENTOR_ID + "  = ?", new String[]{id});
         return true;
+    }
+    public void deleteAllCourseMentorSets(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(COURSEMENTOR_TABLE_NAME, null,null);
+    }
+    public void deleteCourseMentorSets(int courseId){
+        String cid = Integer.toString(courseId);
+        SQLiteDatabase db = this.getWritableDatabase();
+        int result = db.delete(COURSEMENTOR_TABLE_NAME, COURSE_ID + " = ?", new String[]{cid});
+        if(result == -1){
+            Log.v("FAILED TO DELETE", "");
+        }
     }
 
     //term - course set
@@ -628,5 +735,78 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
         return false;
+    }
+
+    //notification
+    public void createNotificationTable(){
+        String createTable = "CREATE TABLE IF NOT EXISTS " + NOTIFICATION_TABLE_NAME + " (" +
+                NOTIFICATION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                NOTIFICATION_TITLE + " TEXT, " +
+                NOTIFICATION_SUB_TEXT + " TEXT, " +
+                NOTIFICATION_TIME + " TEXT)";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL(createTable);
+    }
+    public boolean addNotification(Notification n){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(NOTIFICATION_TITLE, n.getNotificationTitle());
+        contentValues.put(NOTIFICATION_SUB_TEXT, n.getNotificationSubText());
+        contentValues.put(NOTIFICATION_TIME, n.getNotificationTime().toString());
+
+        long result = db.insert(NOTIFICATION_TABLE_NAME, null, contentValues);
+
+        if (result == -1){
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    public void printAllNotificaitons(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor data = db.rawQuery("SELECT * FROM " + NOTIFICATION_TABLE_NAME, null);
+        StringBuffer buffer = new StringBuffer();
+        while (data.moveToNext()) {
+            buffer.append("\n");
+            buffer.append(NOTIFICATION_ID + ": " + data.getString(0) + "\n");
+            buffer.append(NOTIFICATION_TITLE + ": " + data.getString(1) + "\n");
+            buffer.append(NOTIFICATION_SUB_TEXT + ": " + data.getString(2) + "\n");
+            buffer.append(NOTIFICATION_TIME + ": " + data.getString(3) + "\n");
+
+        }
+        Log.v("----------------------", buffer.toString());
+    }
+    public void deleteAllNotifications(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(NOTIFICATION_TABLE_NAME,null,null);
+    }
+    public ArrayList<Notification> getAllNotifications(){
+        ArrayList<Notification> nots = new ArrayList<>();
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor data = db.rawQuery("SELECT * FROM " + NOTIFICATION_TABLE_NAME, null);
+
+        while(data.moveToNext()){
+            int id = Integer.parseInt(data.getString(0));
+            Timestamp ts = Timestamp.valueOf(data.getString(3));
+            nots.add(new Notification(id,
+                    data.getString(1),
+                    data.getString(2),
+                    ts));
+        }
+
+
+        return nots;
+    }
+    public int getNextNotificationId(){
+        int max = 0;
+        for(Notification n : getAllNotifications()){
+            if(n.getNotificationId()>max){
+                max = n.getNotificationId();
+            }
+        }
+        return max+1;
     }
 }

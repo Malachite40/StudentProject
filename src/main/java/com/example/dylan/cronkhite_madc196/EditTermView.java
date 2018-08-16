@@ -233,7 +233,7 @@ public class EditTermView extends AppCompatActivity {
                 DatabaseHelper db = new DatabaseHelper(this);
                 db.addTerm(new Term(1,startDate.toString(),endDate.toString(),termName));
 
-                createEnabledCourses();
+                updateTermCourseSet();
 
                 Intent startIntent = new Intent(getApplicationContext(), TermsView.class);
                 startActivity(startIntent);
@@ -276,7 +276,7 @@ public class EditTermView extends AppCompatActivity {
         for (EnabledTerm t : adapter.getmEnabledTermList()){
             if(t.enabled){
                 if(termId == -1){
-                    db.addTermCourse(new TermCourseSet(1,db.getNextTermID(),t.courseId));
+                    db.addTermCourse(new TermCourseSet(1,db.getNextTermID()-1,t.courseId));
                 }
                 else{
                     db.addTermCourse( new TermCourseSet(1,termId,t.courseId));
